@@ -1,0 +1,72 @@
+version: "3.9"
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: factory-ollama
+    restart: unless-stopped
+    volumes:
+      - ollama_models:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    networks:
+      - internal_factory_net
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: factory-chat-rbac
+    restart: unless-stopped
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - WEBUI_AUTH=True
+      - ENABLE_SIGNUP=False
+      - DEFAULT_USER_ROLE=pending
+    ports:
+      - "8443:8080"
+    volumes:
+      - open_webui_data:/app/backend/data
+    depends_on:
+      - ollama
+    networks:
+      - internal_factory_net
+
+  replica-1c-db:
+    image: postgres:16-alpine
+    container_name: factory-1c-replica
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: replica_1c
+      POSTGRES_USER: readonly_ai
+      POSTGRES_PASSWORD: change_me_in_env
+    volumes:
+      - pg_1c_data:/var/lib/postgresql/data
+    networks:
+      - internal_factory_net
+
+  cv-counter-worker:
+    build: .
+    container_name: factory-cv-counter
+    restart: unless-stopped
+    environment:
+      - RTSP_CASTING_URL=rtsp://camera-casting.local:554/stream1
+      - RTSP_WELDING_URL=rtsp://camera-welding.local:554/stream1
+      - DB_REPLICA_DSN=postgresql://readonly_ai:change_me_in_env@replica-1c-db:5432/replica_1c
+    depends_on:
+      - replica-1c-db
+    networks:
+      - internal_factory_net
+
+networks:
+  internal_factory_net:
+    driver: bridge
+    internal: true
+
+volumes:
+  ollama_models:
+  open_webui_data:
+  pg_1c_data:
