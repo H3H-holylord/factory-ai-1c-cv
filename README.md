@@ -1,5 +1,8 @@
 # Промышленный ИИ-контур: Локальная нейросеть + Отчёты 1С (Read-Only) + Компьютерное зрение (CV)
 
+> 🚀 **[ОТКРЫТЬ ИНТЕРАКТИВНЫЙ ОНЛАЙН ДЕМО-СТЕНД В БРАУЗЕРЕ](https://h3h-holylord.github.io/factory-ai-1c-cv/)**
+> *(Доступны: онлайн-симуляция камер литья и сварки, переключение ролей сотрудников RBAC, отчёты 1С и чат с нейросетью)*
+
 Полностью автономное (On-Premise / Air-Gapped) решение для производственного предприятия (металлообработка, литьё, сварка). Данные не покидают контур сервера предприятия.
 
 ## Визуализация работы модулей
@@ -21,8 +24,8 @@
    - Жёсткая блокировка любых модифицирующих запросов (`INSERT`, `UPDATE`, `DELETE`, `DROP`) на уровне границы данных (`validate_readonly_sql`).
    - Ролевая модель доступа (RBAC) для 15–20 сотрудников (`director`, `production`, `procurement`).
    - Локальный ИИ-ассистент (Qwen 2.5 через Ollama) с формированием безопасных `SELECT`-запросов к выгрузке 1С.
-3. **Генератор демонстрационных стендов ([`src/demo_renderer.py`](src/demo_renderer.py))**:
-   - Формирует наглядные панели видеоаналитики и дашбордов по синтетическим данным 1С.
+3. **Интерактивный веб-стенд ([`src/live_server.py`](src/live_server.py) / [`index.html`](index.html))**:
+   - Живая демонстрация работы камер, ролевого фильтра и ИИ-чата по базе 1С.
 
 ---
 
@@ -31,7 +34,7 @@
 ### Вариант А: Развёртывание в Docker (Боевой / Тестовый сервер)
 ```bash
 # 1. Клонировать проект на локальный сервер
-git clone <url-репозитория> factory-ai-1c-cv
+git clone https://github.com/H3H-holylord/factory-ai-1c-cv.git
 cd factory-ai-1c-cv
 
 # 2. Запустить изолированный контур
@@ -46,6 +49,6 @@ docker exec -it factory-ollama ollama pull qwen2.5:14b
 # 1. Запуск всех модульных и поведенческих тестов (План приёмки)
 python -m pytest -v
 
-# 2. Генерация контрольных экранов мониторинга CV и Дашборда 1С
-python -c "from src.demo_renderer import generate_cv_monitoring_image, generate_dashboard_1c_image; generate_cv_monitoring_image('assets/demo_cv_monitoring.png'); generate_dashboard_1c_image('assets/demo_dashboard_1c.png')"
+# 2. Запуск интерактивного демо-сервера (http://127.0.0.1:8080)
+python -m src.live_server
 ```
